@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deathsong Frequency</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: sans-serif;
+    background-image: url('https://images.unsplash.com/photo-1509248961158-e54f6934749c?auto=format&fit=crop&q=80&w=2000');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+  }
+  
+  .overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 20px 20px;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+
+  input[type="text"] {
+    padding: 14px 20px;
+    border-radius: 8px;
+    border: none;
+    background-color: white;
+    width: 100%;
+    max-width: 400px;
+    font-size: 16px;
+    outline: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    font-weight: 500;
+  }
+
+  .center-display {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    z-index: 5;
+    padding: 20px 0;
+    box-sizing: border-box;
+  }
+
+  .image-container {
+    max-width: 90%;
+    max-height: 65vh;
+    aspect-ratio: 9/16;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    border: 4px solid rgba(255,255,255,0.2);
+    background-color: rgba(20,20,20,0.8);
+    display: none;
+    position: relative;
+    transition: border-color 0.3s ease;
+  }
+
+  .image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: none;
+    position: relative;
+    z-index: 2;
+  }
+
+  .image-loader {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    background: radial-gradient(circle at center, rgba(40,0,0,0.8) 0%, rgba(10,10,10,0.95) 100%);
+    overflow: hidden;
+  }
+
+  .core-pulse {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(255,68,68,0.8), transparent 70%);
+    box-shadow: 0 0 40px #ff4444;
+    animation: pulseCore 1.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulseCore {
+    0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 20px #ff4444; }
+    100% { transform: scale(1.5); opacity: 1; box-shadow: 0 0 60px #ff4444, 0 0 100px rgba(255,0,0,0.5); }
+  }
+
+  .ring {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: #ff4444;
+    border-bottom-color: #ff4444;
+    animation: spinRing 3s linear infinite;
+  }
+
+  .ring:nth-child(3) {
+    width: 220px;
+    height: 220px;
+    border: 2px solid transparent;
+    border-left-color: rgba(255,68,68,0.5);
+    border-right-color: rgba(255,68,68,0.5);
+    animation: spinRingReverse 4s linear infinite;
+  }
+
+  @keyframes spinRing {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+
+  @keyframes spinRingReverse {
+    0% { transform: rotate(360deg) scale(1); }
+    50% { transform: rotate(180deg) scale(0.9); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+
+  .scanner {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,68,68,0.8);
+    position: absolute;
+    box-shadow: 0 0 15px #ff4444, 0 0 30px #ff4444, 0 0 45px #ff4444;
+    animation: scan 2s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+    z-index: 2;
+  }
+
+  @keyframes scan {
+    0% { top: 0%; opacity: 0.2; }
+    50% { opacity: 1; }
+    100% { top: calc(100% - 4px); opacity: 0.2; }
+  }
+
+  .loader-text {
+    position: relative;
+    z-index: 3;
+    color: white;
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 20px #ff4444;
+    margin-top: 20px;
+    font-size: 14px;
+    text-align: center;
+    padding: 0 20px;
+    animation: textGlitch 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  }
+
+  @keyframes textGlitch {
+    0% { transform: translate(0); text-shadow: 0 0 10px #ff4444; }
+    20% { transform: translate(-2px, 1px); text-shadow: -2px 0 #00ffff, 2px 0 #ff00ff; }
+    40% { transform: translate(-1px, -1px); text-shadow: 0 0 15px #ff4444; }
+    60% { transform: translate(2px, 1px); text-shadow: 2px 0 #00ffff, -2px 0 #ff00ff; }
+    80% { transform: translate(1px, -1px); text-shadow: 0 0 15px #ff4444; }
+    100% { transform: translate(0); text-shadow: 0 0 10px #ff4444; }
+  }
+  
+  .grid-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+      linear-gradient(rgba(255,68,68,0.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,68,68,0.15) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: 0;
+    opacity: 0.5;
+    animation: gridMove 10s linear infinite;
+  }
+  
+  @keyframes gridMove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(30px); }
+  }
+
+  .error-msg {
+    display: none;
+    text-align: center;
+    color: #ff8a8a;
+    background-color: rgba(50,0,0,0.8);
+    padding: 30px 40px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,100,100,0.3);
+    max-width: 80%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+  }
+
+  .footer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 20px 40px 20px;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  button {
+    padding: 14px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    cursor: pointer;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    flex: 2;
+    transition: all 0.2s ease;
+    background-color: white;
+    color: #000;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    background-color: #e5e5e5;
+  }
+
+  button.save-btn {
+    flex: 1;
+    background-color: #1a1a1a;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    display: none;
+  }
+
+  .image-download-overlay {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(20,20,20,0.8);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  }
+  .image-download-overlay:hover {
+    background: #ff4444;
+    border-color: #ff4444;
+    transform: scale(1.1);
+  }
+  .image-download-overlay.loading {
+    pointer-events: none;
+    border-top-color: transparent !important;
+    animation: simpleSpin 1s linear infinite;
+  }
+  .image-download-overlay.loading svg {
+    display: none;
+  }
+  @keyframes simpleSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  /* Toggle & Modal Styles */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    margin-right: 10px;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(255,255,255,0.2);
+    transition: .4s;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+  input:checked + .slider {
+    background-color: #ff4444;
+    border-color: #ff4444;
+  }
+  input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+  .toggles-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+
+  .toggle-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    letter-spacing: 0.05em;
+    width: 100%;
+  }
+
+  #negPromptInput {
+    display: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 15px;
+    font-size: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  #negPromptInput.active {
+    display: block;
+  }
+
+  /* Model and API Selection Styles */
+  .api-settings-container {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .settings-panel {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .settings-panel.active {
+    display: flex;
+  }
+
+  select, .settings-panel input {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+  }
+
+  .settings-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    cursor: pointer;
+    z-index: 100;
+    transition: transform 0.3s;
+    background: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .settings-btn:hover {
+    transform: rotate(90deg);
+  }
+  .settings-dropdown {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    background: rgba(20,20,20,0.95);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    display: none;
+    flex-direction: column;
+    z-index: 99;
+    min-width: 280px;
+    backdrop-filter: blur(10px);
+  }
+  .settings-dropdown.active {
+    display: flex;
+  }
+  
+  /* History Modal Styles */
+  .history-modal {
+    display: none;
+    position: fixed;
+    z-index: 200;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .history-modal.active { display: flex; }
+  .history-content {
+    background-color: rgba(20,20,20,0.95);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    width: 100%;
+    max-width: 800px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    position: relative;
+  }
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+  }
+  .history-title {
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .close-history-btn {
+    color: #888;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .close-history-btn:hover { color: #fff; }
+  .history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 15px;
+    overflow-y: auto;
+    padding-right: 10px;
+  }
+  .history-grid::-webkit-scrollbar { width: 8px; }
+  .history-grid::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+  .history-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+  .history-grid::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+  .history-item {
+    position: relative;
+    aspect-ratio: 9/16;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    background: #111;
+  }
+  .history-item:hover {
+    border-color: #ff4444;
+    transform: scale(1.02);
+  }
+  .history-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .history-item-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    padding: 20px 8px 8px 8px;
+    color: white;
+    font-size: 11px;
+    text-align: center;
+    opacity: 0;
+    transition: 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .history-item:hover .history-item-overlay {
+    opacity: 1;
+  }
+  .history-actions {
+    position: absolute;
+    top: 5px; right: 5px;
+    display: flex;
+    gap: 5px;
+    opacity: 0;
+    transition: 0.2s;
+  }
+  .history-item:hover .history-actions { opacity: 1; }
+  button.history-action-btn {
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: none;
+    flex: 0 0 auto;
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: normal;
+  }
+  button.history-action-btn:hover { background: #ff4444; border-color: #ff4444; }
+  button.history-action-btn.loading { pointer-events: none; opacity: 0.5; }
+  .history-empty {
+    grid-column: 1 / -1;
+    color: #888;
+    text-align: center;
+    padding: 40px 0;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+  <div class="overlay"></div>
+  
+  <div class="header">
+    <input type="text" id="promptInput" placeholder="Describe your vision..." autocomplete="off" />
+  </div>
+
+  <div class="center-display">
+    <div class="error-msg" id="errorMsg">
+      <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+      <div style="font-size: 18px; letter-spacing: 0.1em; margin-bottom: 10px;">GENERATION FAILED</div>
+      <div id="errorText" style="font-size: 14px; line-height: 1.5; opacity: 0.9; max-width: 350px; margin: 0 auto;"></div>
+    </div>
+    <div class="image-container" id="imageContainer" style="display: block; border-color: rgba(255,255,255,0.05);">
+      <div class="image-loader" id="imageLoader" style="display: none;">
+        <div class="grid-overlay"></div>
+        <div class="core-pulse"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="scanner"></div>
+        <div class="loader-text">IGNITING FREQUENCY...</div>
+      </div>
+      <img id="generatedImg" src="" alt="Generated Vision" style="display: none;" />
+      <div class="image-download-overlay" id="imageDownloadBtn" title="Download Vision">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-btn" id="settingsBtn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+  </div>
+
+  <div class="settings-dropdown" id="settingsDropdown">
+    <div class="toggles-container">
+      <div class="toggle-wrapper">
+        <label class="switch">
+          <input type="checkbox" id="nsfwToggle">
+          <span class="slider"></span>
+        </label>
+        OVERRIDE FILTERS (NSFW)
+      </div>
+      <div class="toggle-wrapper">
+        <label class="switch">
+          <input type="checkbox" id="negPromptToggle">
+          <span class="slider"></span>
+        </label>
+        NEGATIVE PROMPT
+      </div>
+      <div class="toggle-wrapper">
+        <label class="switch">
+          <input type="checkbox" id="customApiToggle">
+          <span class="slider"></span>
+        </label>
+        CUSTOM API
+      </div>
+    </div>
+    
+    <input type="text" id="negPromptInput" placeholder="Elements to exclude (optional)" autocomplete="off" />
+
+    <div class="api-settings-container" style="margin-bottom: 0;">
+      <div id="freeModelsSettings" class="settings-panel active">
+        <select id="freeModelSelect">
+          <option value="pollinations-flux">Deathsong Frequency - Flux (+18)</option>
+          <option value="pollinations-turbo">Deathsong Frequency - Turbo</option>
+          <option value="pollinations-flux-realism">Deathsong Frequency - Realism (NSFW)</option>
+          <option value="pollinations-flux-anime">Deathsong Frequency - Anime (NSFW)</option>
+          <option value="pollinations-flux-pro">Deathsong Frequency - Pro (+18)</option>
+          <option value="pollinations-any-dark">Deathsong Frequency - Any-Dark</option>
+          <option value="pollinations-flux-3d">Deathsong Frequency - 3D</option>
+        </select>
+      </div>
+
+      <div id="customApiSettings" class="settings-panel">
+        <input type="text" id="apiUrlInput" placeholder="Endpoint URL">
+        <input type="password" id="apiKeyInput" placeholder="API Key (Bearer)">
+        <input type="text" id="apiModelInput" placeholder="Model (e.g. dall-e-3)">
+      </div>
+    </div>
+    
+    <button id="openHistoryBtn" style="margin-top: 20px; width: 100%; border: 1px solid rgba(255,255,255,0.2); background: #1a1a1a; color: white; padding: 12px; flex: none;">HISTORY</button>
+  </div>
+
+  <div class="footer">
+    <div class="button-group">
+      <button id="generateBtn" disabled>Generate</button>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div class="history-modal" id="historyModal">
+    <div class="history-content">
+      <div class="history-header">
+        <div class="history-title">Frequency History</div>
+        <div class="close-history-btn" id="closeHistoryBtn">&times;</div>
+      </div>
+      <div class="history-grid" id="historyGrid">
+        <!-- History items will be injected here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GENERATE_API_URL = 'https://image.pollinations.ai/prompt';
+    
+    const promptInput = document.getElementById('promptInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const imageDownloadBtn = document.getElementById('imageDownloadBtn');
+    const imageLoader = document.getElementById('imageLoader');
+    const errorMsg = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
+    const imageContainer = document.getElementById('imageContainer');
+    const generatedImg = document.getElementById('generatedImg');
+    const nsfwToggle = document.getElementById('nsfwToggle');
+    const negPromptToggle = document.getElementById('negPromptToggle');
+    const negPromptInput = document.getElementById('negPromptInput');
+    const customApiToggle = document.getElementById('customApiToggle');
+    const freeModelsSettings = document.getElementById('freeModelsSettings');
+    const customApiSettings = document.getElementById('customApiSettings');
+    const freeModelSelect = document.getElementById('freeModelSelect');
+    const apiUrlInput = document.getElementById('apiUrlInput');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const apiModelInput = document.getElementById('apiModelInput');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsDropdown = document.getElementById('settingsDropdown');
+    const historyModal = document.getElementById('historyModal');
+    const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+    const openHistoryBtn = document.getElementById('openHistoryBtn');
+    const historyGrid = document.getElementById('historyGrid');
+
+    let currentBlobUrl = null;
+    let pendingHistoryItem = null;
+
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem('deathsong_history') || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHistoryItem(item) {
+      let history = getHistory();
+      // Only keep unique URLs
+      history = history.filter(h => h.url !== item.url);
+      history.unshift(item);
+      if (history.length > 50) history = history.slice(0, 50);
+      localStorage.setItem('deathsong_history', JSON.stringify(history));
+    }
+
+    async function downloadImage(url, sourceBtn = null) {
+      try {
+        if (sourceBtn) sourceBtn.classList.add('loading');
+        if (!url.startsWith('blob:')) {
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const tempUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = tempUrl;
+          link.download = `vision-${Date.now()}.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(tempUrl), 1000);
+        } else {
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `vision-${Date.now()}.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      } catch (err) {
+        console.error('Save failed via fetch, fallback to open', err);
+        window.open(url, '_blank');
+      } finally {
+        if (sourceBtn) sourceBtn.classList.remove('loading');
+      }
+    }
+
+    function loadFromHistory(url, promptStr) {
+      currentBlobUrl = url;
+      promptInput.value = promptStr;
+      imageLoader.style.display = 'flex';
+      generatedImg.style.display = 'none';
+      errorMsg.style.display = 'none';
+      imageContainer.style.display = 'block';
+      imageContainer.style.borderColor = 'rgba(255,255,255,0.2)';
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Processing';
+      
+      generatedImg.src = url;
+      generatedImg.onload = () => {
+        imageLoader.style.display = 'none';
+        generatedImg.style.display = 'block';
+        imageContainer.style.borderColor = 'white';
+        imageDownloadBtn.style.display = 'flex';
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate';
+      };
+      
+      generatedImg.onerror = () => {
+        imageLoader.style.display = 'none';
+        errorMsg.style.display = 'block';
+        imageContainer.style.borderColor = 'rgba(255,255,255,0.05)';
+        errorText.textContent = 'Image failed to load from history.';
+        imageDownloadBtn.style.display = 'none';
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate';
+      };
+      
+      historyModal.classList.remove('active');
+    }
+
+    function renderHistory() {
+      const history = getHistory();
+      historyGrid.innerHTML = '';
+      
+      if (history.length === 0) {
+        historyGrid.innerHTML = '<div class="history-empty">No frequency records found.</div>';
+        return;
+      }
+      
+      history.forEach((item, index) => {
+        const el = document.createElement('div');
+        el.className = 'history-item';
+        el.innerHTML = `
+          <img src="${item.url}" alt="History Item ${index}" loading="lazy" />
+          <div class="history-item-overlay">${item.prompt}</div>
+          <div class="history-actions">
+             <button class="history-action-btn dl-btn" title="Download">⬇️</button>
+          </div>
+        `;
+        
+        el.addEventListener('click', (e) => {
+          if (e.target.closest('.dl-btn')) return;
+          loadFromHistory(item.url, item.prompt);
+        });
+        
+        const dlBtn = el.querySelector('.dl-btn');
+        dlBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          downloadImage(item.url, dlBtn);
+        });
+        
+        historyGrid.appendChild(el);
+      });
+    }
+
+    openHistoryBtn.addEventListener('click', () => {
+      settingsDropdown.classList.remove('active');
+      renderHistory();
+      historyModal.classList.add('active');
+    });
+
+    closeHistoryBtn.addEventListener('click', () => {
+      historyModal.classList.remove('active');
+    });
+
+    settingsBtn.addEventListener('click', () => {
+      settingsDropdown.classList.toggle('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!settingsBtn.contains(e.target) && !settingsDropdown.contains(e.target)) {
+        settingsDropdown.classList.remove('active');
+      }
+    });
+    // Toggle logic for Negative Prompt
+    negPromptToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        negPromptInput.classList.add('active');
+        negPromptInput.focus();
+      } else {
+        negPromptInput.classList.remove('active');
+      }
+    });
+
+    // Toggle logic for Custom API
+    customApiToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        customApiSettings.classList.add('active');
+        freeModelsSettings.classList.remove('active');
+      } else {
+        customApiSettings.classList.remove('active');
+        freeModelsSettings.classList.add('active');
+      }
+    });
+
+    generateBtn.addEventListener('click', async () => {
+      const userPrompt = promptInput.value.trim();
+      if (!userPrompt) return;
+
+      // Update UI state
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Processing';
+      imageLoader.style.display = 'flex';
+      errorMsg.style.display = 'none';
+      imageContainer.style.borderColor = 'rgba(255,255,255,0.2)';
+      generatedImg.style.display = 'none';
+      imageDownloadBtn.style.display = 'none';
+
+      // Clean up previous blob
+      if (currentBlobUrl) {
+        if (currentBlobUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(currentBlobUrl);
+        }
+        currentBlobUrl = null;
+        generatedImg.src = '';
+      }
+
+      const seed = Math.floor(Math.random() * 1000000);
+
+      // Enhance prompt
+      let finalPrompt = userPrompt + ", masterpiece, best quality, ultra highres, raw photo, highly detailed, realistic lighting, sharp focus, volumetric lighting, cinematic composition, 8k resolution, subsurface scattering";
+      
+      if (nsfwToggle.checked) {
+        finalPrompt += ", explicit, uncensored, adult content, completely nude, nude, highly detailed anatomy, +18, erotic";
+      }
+
+      // Base negative prompt
+      let negativePrompt = "worst quality, low quality, normal quality, low resolution, bad anatomy, poorly drawn face, poorly drawn hands, missing limbs, fused fingers, too many fingers, deformed, blurry, censored, mutation, malformed limbs, extra limbs, watermark, signature, text, out of frame, ugly";
+      
+      // Add custom negative prompt if toggle is enabled
+      const customNegPrompt = negPromptInput.value.trim();
+      if (negPromptToggle.checked && customNegPrompt) {
+        negativePrompt += ", " + customNegPrompt;
+      }
+
+      try {
+        let imageUrlToLoad = null;
+
+        if (customApiToggle.checked) {
+          const apiUrl = apiUrlInput.value.trim();
+          const apiKey = apiKeyInput.value.trim();
+          const apiModel = apiModelInput.value.trim() || 'dall-e-3';
+
+          if (!apiUrl || !apiKey) {
+            throw new Error('API URL and Key are required for Custom API mode.');
+          }
+
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: apiModel,
+              prompt: finalPrompt,
+              n: 1,
+              size: "1024x1024"
+            })
+          });
+
+          if (!response.ok) throw new Error(`Custom API Error: ${response.status}`);
+          const data = await response.json();
+          imageUrlToLoad = data.data?.[0]?.url;
+          if (!imageUrlToLoad) throw new Error('Image URL not found in API response.');
+
+          currentBlobUrl = imageUrlToLoad;
+        } else {
+          const selectedModel = freeModelSelect.value;
+          if (selectedModel.startsWith('pollinations')) {
+            const modelName = selectedModel.split('-').slice(1).join('-');
+            const targetUrl = `${GENERATE_API_URL}/${encodeURIComponent(finalPrompt)}?width=1080&height=1920&nologo=true&seed=${seed}&enhance=true&model=${modelName}&negative=${encodeURIComponent(negativePrompt)}`;
+            
+            // Bypass fetch caching/CORS issues and directly assign the URL
+            imageUrlToLoad = targetUrl;
+            currentBlobUrl = imageUrlToLoad;
+          }
+        }
+
+        generatedImg.src = imageUrlToLoad;
+        
+        pendingHistoryItem = {
+          url: imageUrlToLoad,
+          prompt: userPrompt,
+          timestamp: Date.now()
+        };
+
+        generatedImg.onload = () => {
+          imageLoader.style.display = 'none';
+          generatedImg.style.display = 'block';
+          imageContainer.style.borderColor = 'white';
+          imageDownloadBtn.style.display = 'flex';
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Generate';
+          
+          if (pendingHistoryItem) {
+            saveHistoryItem(pendingHistoryItem);
+            pendingHistoryItem = null;
+          }
+        };
+
+        generatedImg.onerror = () => {
+          imageLoader.style.display = 'none';
+          errorMsg.style.display = 'block';
+          imageContainer.style.borderColor = 'rgba(255,255,255,0.05)';
+          imageDownloadBtn.style.display = 'none';
+          errorText.textContent = 'Image failed to load. The content may have been blocked or the service is temporarily unavailable.';
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Generate';
+        };
+        
+      } catch (error) {
+        console.error('Error loading image:', error);
+        imageLoader.style.display = 'none';
+        errorMsg.style.display = 'block';
+        imageContainer.style.borderColor = 'rgba(255,255,255,0.05)';
+        
+        if (error.message && error.message.includes('429')) {
+          errorText.textContent = "The frequency is overloaded. Too many requests are being made right now. Please wait a moment before igniting the frequency again.";
+        } else if (error.message && error.message.includes('Failed to fetch')) {
+          errorText.textContent = "Network error. The API might be restricted by CORS, or an ad blocker is preventing the request. If using a Custom API, ensure it allows browser requests.";
+        } else {
+          errorText.textContent = error.message || "We couldn't generate your vision. The signals might be crossed or the prompt was blocked.";
+        }
+        
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate';
+      }
+    });
+
+    imageDownloadBtn.addEventListener('click', async () => {
+      if (!currentBlobUrl) return;
+      downloadImage(currentBlobUrl, imageDownloadBtn);
+    });
+
+    promptInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !generateBtn.disabled) {
+        generateBtn.click();
+      }
+    });
+    negPromptInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !generateBtn.disabled) {
+        generateBtn.click();
+      }
+    });
+
+    promptInput.addEventListener('input', () => {
+      if (promptInput.value.trim() === '') {
+          generateBtn.disabled = true;
+      } else if (imageLoader.style.display !== 'flex') {
+          generateBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

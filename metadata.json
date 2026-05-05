@@ -1,0 +1,6 @@
+{
+  "name": "Boring Image Gen",
+  "description": "An extremely minimal and boring text interface for image generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
